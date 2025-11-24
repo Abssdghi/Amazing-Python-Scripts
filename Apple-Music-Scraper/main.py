@@ -899,6 +899,7 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
 
     return result
 
+
 def test_all_functions():
     """
     Run integration-style tests for all scraper functions.

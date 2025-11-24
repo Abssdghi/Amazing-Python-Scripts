@@ -4,7 +4,7 @@ import json
 from bs4 import BeautifulSoup
 
 
-def get_cover(url, width, height, format="jpg", crop_option=""):
+def get_cover(url, width, height, img_format="jpg", crop_option=""):
     """
     Generate a full Apple Music artwork URL with proper width, height, format, and crop settings.
 
@@ -16,8 +16,8 @@ def get_cover(url, width, height, format="jpg", crop_option=""):
         Target width of the image.
     height : int or str
         Target height of the image.
-    format : str, optional
-        Image format (jpg, png, etc.). Defaults to `"jpg"`.
+    img_format : str, optional
+        Image format (jpg, png, etc.). Defaults to "jpg".
     crop_option : str, optional
         Cropping mode used by Apple Music artwork URLs. Defaults to empty string.
 
@@ -39,7 +39,7 @@ def get_cover(url, width, height, format="jpg", crop_option=""):
             url.replace("{w}", str(width))
                .replace("{h}", str(height))
                .replace("{c}", crop_option)
-               .replace("{f}", format)
+               .replace("{f}", img_format)
         )
         return new_url
     except (TypeError, AttributeError):
