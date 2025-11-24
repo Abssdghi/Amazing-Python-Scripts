@@ -270,3 +270,146 @@ def append_urls_from_section(section, target_list):
         url = safe_action_url(it)
         if url:
             target_list.append(url)
+
+
+def fetch_page(url):
+    """
+    Fetch the HTML content of a web page.
+
+    Args:
+        url (str): The target URL to request.
+
+    Returns:
+        str or None: The text content of the page if the request succeeds,
+        otherwise None.
+    """
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        rspn = requests.get(url, headers=headers, timeout=10)
+        rspn.raise_for_status()
+        return rspn.text
+    except Exception:
+        return None
+
+
+def parse_server_data(html):
+    """
+    Parse serialized server data from an Apple Music–like HTML page.
+
+    The function looks for a <script> tag with id="serialized-server-data"
+    and attempts to load the JSON contained within it.
+
+    Args:
+        html (str): Raw HTML content.
+
+    Returns:
+        dict or None: The parsed sections dictionary if found and valid,
+        otherwise None.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("script", {"id": "serialized-server-data"})
+    if not tag:
+        return None
+
+    try:
+        data = json.loads(tag.text)
+        return data[0]["data"]["sections"]
+    except Exception:
+        return None
+
+
+def extract_header_sections(sections):
+    """
+    Extract specific sections from a list of server data sections.
+
+    Searches for:
+        - music-video-header
+        - more-by-artist
+        - more-in-genre
+
+    Args:
+        sections (list): List of section dictionaries.
+
+    Returns:
+        tuple: (header, more_by_artist, more_in_genre) where each element
+        may be a dictionary or None.
+    """
+    header, more, similar = None, None, None
+
+    for sec in sections:
+        sec_id = sec.get("id", "")
+        if "music-video-header" in sec_id:
+            header = sec
+        elif "more-by-artist" in sec_id:
+            more = sec
+        elif "more-in-genre" in sec_id:
+            similar = sec
+
+    return header, more, similar
+
+
+def extract_video_header(header):
+    """
+    Extract key information from the music video header section.
+
+    Args:
+        header (dict): The header section dictionary.
+
+    Returns:
+        dict: A dictionary containing:
+            - title (str)
+            - artwork (dict)
+            - artist_link (dict)
+    """
+    item = header.get("items", [{}])[0]
+    return {
+        "title": item.get("title", ""),
+        "artwork": item.get("artwork", {}).get("dictionary", {}),
+        "artist_link": item.get("subtitleLinks", [{}])[0],
+    }
+
+
+def extract_video_url(html):
+    """
+    Extract the direct video URL from JSON-LD schema data inside the HTML.
+
+    Looks for a <script> tag with id="schema:music-video" and
+    type="application/ld+json".
+
+    Args:
+        html (str): Raw HTML page content.
+
+    Returns:
+        str: The video content URL if found, otherwise an empty string.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    try:
+        json_tag = soup.find(
+            "script",
+            {"id": "schema:music-video", "type": "application/ld+json"},
+        )
+        sd = json.loads(json_tag.string)
+        return sd["video"]["contentUrl"]
+    except Exception:
+        return ""
+
+
+def extract_urls(section):
+    """
+    Extract action URLs from a section's item list.
+
+    Args:
+        section (dict or None): A section dictionary containing "items".
+
+    Returns:
+        list[str]: A list of extracted URLs. Empty if section is None
+        or items contain no valid URLs.
+    """
+    if not section:
+        return []
+    urls = []
+    for item in section.get("items", []):
+        url = safe_action_url(item)
+        if url:
+            urls.append(url)
+    return urls

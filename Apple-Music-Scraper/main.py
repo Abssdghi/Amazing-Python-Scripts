@@ -3,6 +3,8 @@ import requests
 import json
 from utils import convert_album_to_song_url, get_cover
 from utils import safe_action_url, find_section, append_urls_from_section
+from utils import fetch_page, parse_server_data, extract_header_sections
+from utils import extract_video_header, extract_video_url, extract_urls
 
 
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
@@ -623,104 +625,47 @@ def video_scrape(
     -----
     Uses JSON-LD block `schema:music-video` to extract the direct video content URL.
     """
+    html = fetch_page(url)
+    if not html:
+        return {
+            "title": "",
+            "image": "",
+            "artist": {"title": "", "url": ""},
+            "video-url": "",
+            "more": [],
+            "similar": [],
+        }
+
+    sections = parse_server_data(html)
+    if not sections:
+        return {}
+
+    header, more_sec, similar_sec = extract_header_sections(sections)
+    info = extract_video_header(header)
+
+    # Build result
     result = {
-        "title": "",
-        "image": "",
-        "artist": {"title": "", "url": ""},
-        "video-url": "",
-        "more": [],
-        "similar": [],
+        "title": info["title"],
+        "image": get_cover(
+            info["artwork"].get("url", ""),
+            info["artwork"].get("width", 0),
+            info["artwork"].get("height", 0),
+        ),
+        "artist": {
+            "title": info["artist_link"].get("title", ""),
+            "url": (
+                info["artist_link"]
+                .get("segue", {})
+                .get("actionMetrics", {})
+                .get("data", [{}])[0]
+                .get("fields", {})
+                .get("actionUrl", "")
+            ),
+        },
+        "video-url": extract_video_url(html),
+        "more": extract_urls(more_sec),
+        "similar": extract_urls(similar_sec),
     }
-
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    try:
-        rspn = requests.get(url, headers=headers, timeout=10)
-        rspn.raise_for_status()
-    except Exception:
-        return result
-
-    soup = BeautifulSoup(rspn.text, "html.parser")
-    tag = soup.find("script", {"id": "serialized-server-data"})
-    if not tag:
-        return result
-
-    try:
-        data = json.loads(tag.text)
-        sections = data[0]["data"]["sections"]
-    except (KeyError, IndexError, json.JSONDecodeError):
-        return result
-
-    music_video_header = None
-    more = None
-    similar = None
-
-    for sec in sections:
-        sec_id = sec.get("id", "")
-        if "music-video-header" in sec_id:
-            music_video_header = sec
-        elif "more-by-artist" in sec_id:
-            more = sec
-        elif "more-in-genre" in sec_id:
-            similar = sec
-
-    # TITLE
-    item = (music_video_header or {}).get("items", [{}])[0]
-    result["title"] = item.get("title", "")
-
-    # IMAGE
-    try:
-        artwork = item.get("artwork", {}).get("dictionary", {})
-        result["image"] = get_cover(
-            artwork.get("url", ""),
-            artwork.get("width", 0),
-            artwork.get("height", 0),
-        )
-    except Exception:
-        pass
-
-    # ARTIST
-    try:
-        sl = item.get("subtitleLinks", [])[0]
-        result["artist"]["title"] = sl.get("title", "")
-        result["artist"]["url"] = (
-            sl["segue"]["actionMetrics"]
-            ["data"][0]["fields"]["actionUrl"]
-        )
-    except Exception:
-        pass
-
-    # VIDEO URL
-    try:
-        json_tag = soup.find(
-            "script",
-            {
-                "id": "schema:music-video",
-                "type": "application/ld+json"
-            }
-        )
-        schema_data = json.loads(json_tag.string)
-        result["video-url"] = schema_data["video"]["contentUrl"]
-    except (AttributeError, KeyError, TypeError, json.JSONDecodeError):
-        pass
-
-    # MORE BY ARTIST
-    try:
-        for m in more.get("items", []):
-            url = safe_action_url(m)
-            if url:
-                result["more"].append(url)
-    except Exception:
-        pass
-
-    # SIMILAR
-    try:
-        for s in similar.get("items", []):
-            url = safe_action_url(s)
-            if url:
-                result["similar"].append(url)
-    except Exception:
-        pass
 
     return result
 
