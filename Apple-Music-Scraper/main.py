@@ -483,7 +483,9 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
         "image": header["image"],
         "caption": header["caption"],
         "artist": header["artist"],
-        "songs": extract_song_list(sections[idx["track_list"]]) if idx["track_list"] else [],
+        "songs": extract_song_list(
+                sections[idx["track_list"]]
+            ) if idx["track_list"] else [],
         "info": info,
         "more": more_urls,
         "similar": extract_more(sections[idx["similar"]]) if idx["similar"] else [],

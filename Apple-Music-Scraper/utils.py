@@ -416,6 +416,25 @@ def extract_urls(section):
 
 
 def find_section_indices(sections):
+    """
+    Identify the indices of key sections in the album/server data.
+
+    Scans each section's "id" field and maps matching identifiers to:
+        - album
+        - track_list
+        - track_section
+        - video
+        - more
+        - similar
+
+    Args:
+        sections (list[dict]): List of section dictionaries parsed from
+            serialized server data.
+
+    Returns:
+        dict: A dictionary mapping section names to their index (int) or
+        None if not found.
+    """
     idx = {
         "album": None,
         "track_list": None,
@@ -477,6 +496,18 @@ def extract_album_header(item):
 
 
 def extract_song_list(section):
+    """
+    Extract a list of song URLs from a track list section.
+
+    Converts album URLs to song URLs using `convert_album_to_song_url`.
+
+    Args:
+        section (dict or None): The "track list" section.
+
+    Returns:
+        list[str]: A list of usable song URLs. Returns an empty list if
+        the section is None or no valid URLs are found.
+    """
     songs = []
     if not section:
         return songs
@@ -494,6 +525,18 @@ def extract_song_list(section):
 
 
 def extract_more(sim_or_more_section):
+    """
+    Extract URLs from a 'more' or 'similar' section.
+
+    Uses safe_action_url() to resolve the internal action URL.
+
+    Args:
+        sim_or_more_section (dict or None): The section containing items.
+
+    Returns:
+        list[str]: Extracted URLs. Empty list if section is None or has
+        no valid items.
+    """
     if not sim_or_more_section:
         return []
 
@@ -507,6 +550,16 @@ def extract_more(sim_or_more_section):
 
 
 def extract_video_urls(section):
+    """
+    Extract the raw video URLs from a 'video' section.
+
+    Args:
+        section (dict or None): The section containing video items.
+
+    Returns:
+        list[str]: A list of video URLs. Returns an empty list if the
+        section is None or contains no valid video entries.
+    """
     vids = []
     if not section:
         return vids
