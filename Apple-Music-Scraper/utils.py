@@ -413,3 +413,108 @@ def extract_urls(section):
         if url:
             urls.append(url)
     return urls
+
+
+def find_section_indices(sections):
+    idx = {
+        "album": None,
+        "track_list": None,
+        "track_section": None,
+        "video": None,
+        "more": None,
+        "similar": None,
+    }
+
+    for i, sec in enumerate(sections):
+        sec_id = sec.get("id", "")
+        if "album-detail" in sec_id:
+            idx["album"] = i
+        elif "track-list " in sec_id:
+            idx["track_list"] = i
+        elif "track-list-section" in sec_id:
+            idx["track_section"] = i
+        elif "video" in sec_id:
+            idx["video"] = i
+        elif "more" in sec_id:
+            idx["more"] = i
+        elif "you-might-also-like" in sec_id:
+            idx["similar"] = i
+
+    return idx
+
+
+def extract_album_header(item):
+    """Extract title, image, caption, artist."""
+    result = {
+        "title": item.get("title", ""),
+        "image": "",
+        "caption": item.get(
+            "modalPresentationDescriptor", {}
+        ).get("paragraphText", ""),
+        "artist": {"title": "", "url": ""},
+    }
+
+    # image
+    artwork = item.get("artwork", {}).get("dictionary", {})
+    result["image"] = get_cover(
+        artwork.get("url", ""),
+        artwork.get("width", 0),
+        artwork.get("height", 0),
+    )
+
+    # artist
+    try:
+        sl = item.get("subtitleLinks", [])[0]
+        result["artist"]["title"] = sl.get("title", "")
+        result["artist"]["url"] = (
+            sl["segue"]["actionMetrics"]
+            ["data"][0]["fields"]["actionUrl"]
+        )
+    except Exception:
+        pass
+
+    return result
+
+
+def extract_song_list(section):
+    songs = []
+    if not section:
+        return songs
+
+    for it in section.get("items", []):
+        try:
+            url = it["contentDescriptor"]["url"]
+            song_url = convert_album_to_song_url(url)
+            if song_url:
+                songs.append(song_url)
+        except Exception:
+            continue
+
+    return songs
+
+
+def extract_more(sim_or_more_section):
+    if not sim_or_more_section:
+        return []
+
+    urls = []
+    for item in sim_or_more_section.get("items", []):
+        url = safe_action_url(item)
+        if url:
+            urls.append(url)
+
+    return urls
+
+
+def extract_video_urls(section):
+    vids = []
+    if not section:
+        return vids
+
+    for v in section.get("items", []):
+        try:
+            vids.append(v["contentDescriptor"]["url"])
+        except Exception:
+            continue
+
+    return vids

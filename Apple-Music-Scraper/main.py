@@ -5,6 +5,8 @@ from utils import convert_album_to_song_url, get_cover
 from utils import safe_action_url, find_section, append_urls_from_section
 from utils import fetch_page, parse_server_data, extract_header_sections
 from utils import extract_video_header, extract_video_url, extract_urls
+from utils import find_section_indices, extract_album_header, extract_song_list
+from utils import extract_more, extract_video_urls
 
 
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
@@ -452,147 +454,41 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
     - more by artist
     - album videos
     """
-    result = {
-        "title": "",
-        "image": "",
-        "caption": "",
-        "artist": {"title": "", "url": ""},
-        "songs": [],
-        "info": "",
-        "more": [],
-        "similar": [],
-        "videos": [],
+    html = fetch_page(url)
+    if not html:
+        return {}
+
+    sections = parse_server_data(html)
+    if not sections:
+        return {}
+
+    idx = find_section_indices(sections)
+
+    # ALBUM HEADER
+    album_item = sections[idx["album"]]["items"][0]
+    header = extract_album_header(album_item)
+
+    # INFO + MORE
+    info = ""
+    more_urls = []
+    if idx["track_section"] is not None:
+        section = sections[idx["track_section"]]
+        info = section.get("items", [{}])[0].get("description", "")
+    if idx["more"] is not None:
+        more_urls = extract_more(sections[idx["more"]])
+
+    # FINAL STRUCTURE
+    return {
+        "title": header["title"],
+        "image": header["image"],
+        "caption": header["caption"],
+        "artist": header["artist"],
+        "songs": extract_song_list(sections[idx["track_list"]]) if idx["track_list"] else [],
+        "info": info,
+        "more": more_urls,
+        "similar": extract_more(sections[idx["similar"]]) if idx["similar"] else [],
+        "videos": extract_video_urls(sections[idx["video"]]) if idx["video"] else [],
     }
-
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    try:
-        rspn = requests.get(url, headers=headers, timeout=10)
-        rspn.raise_for_status()
-    except Exception:
-        return result
-
-    soup = BeautifulSoup(rspn.text, "html.parser")
-    tag = soup.find("script", {"id": "serialized-server-data"})
-    if not tag:
-        return result
-
-    try:
-        data = json.loads(tag.text)
-        sections = data[0]["data"]["sections"]
-    except (KeyError, IndexError, json.JSONDecodeError):
-        return result
-
-    album_detail_index = None
-    track_list_index = None
-    video_index = None
-    more_index = None
-    similar_index = None
-    track_list_section_index = None
-
-    for idx, sec in enumerate(sections):
-        sec_id = sec.get("id", "")
-        if "album-detail" in sec_id:
-            album_detail_index = idx
-        elif "track-list " in sec_id:
-            track_list_index = idx
-        elif "video" in sec_id:
-            video_index = idx
-        elif "more" in sec_id:
-            more_index = idx
-        elif "you-might-also-like" in sec_id:
-            similar_index = idx
-        elif "track-list-section" in sec_id:
-            track_list_section_index = idx
-
-    # TITLE
-    try:
-        item = sections[album_detail_index]["items"][0]
-        result["title"] = item.get("title", "")
-    except Exception:
-        pass
-
-    # IMAGE
-    try:
-        artwork = item.get("artwork", {}).get("dictionary", {})
-        result["image"] = get_cover(
-            artwork.get("url", ""),
-            artwork.get("width", 0),
-            artwork.get("height", 0),
-        )
-    except Exception:
-        pass
-
-    # CAPTION
-    try:
-        result["caption"] = item.get(
-            "modalPresentationDescriptor",
-            {}
-        ).get("paragraphText", "")
-    except Exception:
-        pass
-
-    # ARTIST
-    try:
-        sl = item.get("subtitleLinks", [])[0]
-        result["artist"]["title"] = sl.get("title", "")
-        result["artist"]["url"] = (
-            sl["segue"]["actionMetrics"]
-            ["data"][0]["fields"]["actionUrl"]
-        )
-    except Exception:
-        pass
-
-    # SONG LIST
-    try:
-        track_items = sections[track_list_index].get("items", [])
-        for it in track_items:
-            try:
-                url = it["contentDescriptor"]["url"]
-                song_url = convert_album_to_song_url(url)
-                if song_url:
-                    result["songs"].append(song_url)
-            except Exception:
-                continue
-    except Exception:
-        pass
-
-    # INFO + MORE SONGS
-    try:
-        desc_item = sections[track_list_section_index]["items"][0]
-        result["info"] = desc_item.get("description", "")
-
-        more_items = sections[more_index].get("items", [])
-        for m in more_items:
-            url = safe_action_url(m)
-            if url:
-                result["more"].append(url)
-    except Exception:
-        pass
-
-    # SIMILAR
-    try:
-        sim_items = sections[similar_index].get("items", [])
-        for s in sim_items:
-            url = safe_action_url(s)
-            if url:
-                result["similar"].append(url)
-    except Exception:
-        pass
-
-    # VIDEOS
-    try:
-        vid_items = sections[video_index].get("items", [])
-        for v in vid_items:
-            try:
-                url = v["contentDescriptor"]["url"]
-                result["videos"].append(url)
-            except Exception:
-                continue
-    except Exception:
-        pass
-
-    return result
 
 
 def video_scrape(
@@ -900,3 +796,5 @@ def test_all_functions():
         print("artist_scrape ERROR:", e)
 
     print("\n=== ALL TESTS COMPLETED ===")
+
+test_all_functions()
