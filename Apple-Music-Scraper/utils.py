@@ -144,7 +144,10 @@ def get_all_singles(url="https://music.apple.com/us/artist/king-princess/1349968
 
     for item in items:
         try:
-            action_url = item["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            action_url = (
+                item["segue"]["actionMetrics"]
+                ["data"][0]["fields"]["actionUrl"]
+            )
             result.append(action_url)
         except (KeyError, IndexError, TypeError):
             continue

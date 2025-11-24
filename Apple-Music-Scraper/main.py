@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
-import requests, json
+import requests
+import json
 from utils import convert_album_to_song_url, get_cover, get_all_singles
 
 
@@ -51,7 +52,10 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
 
     for item in items:
         try:
-            action_url = item["playAction"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            action_url = (
+                item["playAction"]["actionMetrics"]
+                ["data"][0]["fields"]["actionUrl"]
+            )
             song_url = convert_album_to_song_url(action_url)
             if song_url:
                 result.append(song_url)
@@ -61,7 +65,12 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
     return result
 
 
-def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl.2b0e6e332fdf4b7a91164da3162127b5"):
+def playlist_scrape(
+    link=(
+        "https://music.apple.com/us/playlist"
+        "/new-music-daily/pl.2b0e6e332fdf4b7a91164da3162127b5"
+    ),
+):
     """
     Scrape an Apple Music playlist and extract all track URLs.
 
@@ -108,7 +117,10 @@ def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl
 
     for item in items:
         try:
-            action_url = item["playAction"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            action_url = (
+                item["playAction"]["actionMetrics"]
+                ["data"][0]["fields"]["actionUrl"]
+            )
             song_url = convert_album_to_song_url(action_url)
             if song_url:
                 result.append(song_url)
@@ -208,7 +220,14 @@ def search(keyword="sasha sloan"):
                 artwork_dict.get("width", 0),
                 artwork_dict.get("height", 0),
             )
-            result["albums"].append({"title": title, "artist": artist, "url": url, "image": img})
+            result["albums"].append(
+                {
+                    "title": title, 
+                    "artist": artist, 
+                    "url": url, 
+                    "image": img
+                }
+            )
         except (KeyError, TypeError, IndexError):
             continue
 
@@ -224,7 +243,14 @@ def search(keyword="sasha sloan"):
                 artwork_dict.get("width", 0),
                 artwork_dict.get("height", 0),
             )
-            result["songs"].append({"title": title, "artist": artist, "url": url, "image": img})
+            result["songs"].append(
+                {
+                    "title": title,
+                    "artist": artist,
+                    "url": url, 
+                    "image": img
+                }
+            )
         except (KeyError, TypeError, IndexError):
             continue
 
@@ -240,7 +266,14 @@ def search(keyword="sasha sloan"):
                 artwork_dict.get("width", 0),
                 artwork_dict.get("height", 0),
             )
-            result["playlists"].append({"title": title, "artist": artist, "url": url, "image": img})
+            result["playlists"].append(
+                {
+                    "title": title,
+                    "artist": artist,
+                    "url": url,
+                    "image": img
+                }
+            )
         except (KeyError, TypeError, IndexError):
             continue
 
@@ -256,7 +289,14 @@ def search(keyword="sasha sloan"):
                 artwork_dict.get("width", 0),
                 artwork_dict.get("height", 0),
             )
-            result["videos"].append({"title": title, "artist": artist, "url": url, "image": img})
+            result["videos"].append(
+                {
+                    "title": title,
+                    "artist": artist,
+                    "url": url,
+                    "image": img
+                }
+            )
         except (KeyError, TypeError, IndexError):
             continue
 
@@ -334,19 +374,31 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
     result["album"]["title"] = item.get("album", "")
 
     try:
-        result["album"]["url"] = item["albumLinks"][0]["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        result["album"]["url"] = (
+            item["albumLinks"][0]["segue"]["actionMetrics"]
+            ["data"][0]["fields"]["actionUrl"]
+        )
     except (KeyError, IndexError, TypeError):
         pass
 
     result["artist"]["title"] = item.get("artists", "")
 
     try:
-        result["artist"]["url"] = item["artistLinks"][0]["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        result["artist"]["url"] = (
+            item["artistLinks"][0]["segue"]["actionMetrics"]
+            ["data"][0]["fields"]["actionUrl"]
+        )
     except (KeyError, IndexError, TypeError):
         pass
 
     try:
-        json_tag = soup.find("script", {"id": "schema:song", "type": "application/ld+json"})
+        json_tag = soup.find(
+            "script",
+            {
+                "id": "schema:song",
+                "type": "application/ld+json"
+            }
+        )
         schema_data = json.loads(json_tag.string)
         result["preview-url"] = schema_data["audio"]["audio"]["contentUrl"]
     except (AttributeError, KeyError, TypeError, json.JSONDecodeError):
@@ -471,7 +523,10 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
 
     # CAPTION
     try:
-        result["caption"] = item.get("modalPresentationDescriptor", {}).get("paragraphText", "")
+        result["caption"] = item.get(
+            "modalPresentationDescriptor",
+            {}
+        ).get("paragraphText", "")
     except Exception:
         pass
 
@@ -479,7 +534,10 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
     try:
         sl = item.get("subtitleLinks", [])[0]
         result["artist"]["title"] = sl.get("title", "")
-        result["artist"]["url"] = sl["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        result["artist"]["url"] = (
+            sl["segue"]["actionMetrics"]
+            ["data"][0]["fields"]["actionUrl"]
+        )
     except Exception:
         pass
 
@@ -539,7 +597,12 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
     return result
 
 
-def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026"):
+def video_scrape(
+    url=(
+        "https://music.apple.com/us/music-video/"
+        "gucci-mane-visualizer/1810547026"
+    ),
+):
     """
     Scrape Apple Music music-video page and extract metadata + video file URL.
 
@@ -627,13 +690,22 @@ def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualiz
     try:
         sl = item.get("subtitleLinks", [])[0]
         result["artist"]["title"] = sl.get("title", "")
-        result["artist"]["url"] = sl["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        result["artist"]["url"] = (
+            sl["segue"]["actionMetrics"]
+            ["data"][0]["fields"]["actionUrl"]
+        )
     except Exception:
         pass
 
     # VIDEO URL
     try:
-        json_tag = soup.find("script", {"id": "schema:music-video", "type": "application/ld+json"})
+        json_tag = soup.find(
+            "script",
+            {
+                "id": "schema:music-video",
+                "type": "application/ld+json"
+            }
+        )
         schema_data = json.loads(json_tag.string)
         result["video-url"] = schema_data["video"]["contentUrl"]
     except (AttributeError, KeyError, TypeError, json.JSONDecodeError):
@@ -782,7 +854,10 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
 
     # LATEST
     try:
-        result["latest"] = latest_and_top["pinnedLeadingItem"]["item"]["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        result["latest"] = (
+            latest_and_top["pinnedLeadingItem"]["item"]["segue"]
+            ["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+        )
     except Exception:
         pass
 
@@ -962,7 +1037,9 @@ def test_all_functions():
 
     print("\n=== TEST: album_scrape ===")
     try:
-        album = album_scrape("https://music.apple.com/us/album/1965/1817707266?i=1817707585")
+        album = album_scrape(
+            "https://music.apple.com/us/album/1965/1817707266?i=1817707585"
+        )
         print("Album title:", album.get("title"))
         print("Songs:", len(album.get("songs", [])))
     except Exception as e:
@@ -970,7 +1047,9 @@ def test_all_functions():
 
     print("\n=== TEST: video_scrape ===")
     try:
-        video = video_scrape("https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026")
+        video = video_scrape(
+            "https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026"
+        )
         print("Video title:", video.get("title"))
         print("Video URL exists:", bool(video.get("video-url")))
     except Exception as e:
@@ -978,7 +1057,9 @@ def test_all_functions():
 
     print("\n=== TEST: artist_scrape ===")
     try:
-        artist = artist_scrape("https://music.apple.com/us/artist/king-princess/1349968534")
+        artist = artist_scrape(
+            "https://music.apple.com/us/artist/king-princess/1349968534"
+        )
         print("Artist title:", artist.get("title"))
         print("Top songs:", len(artist.get("top", [])))
         print("Albums:", len(artist.get("albums", [])))
@@ -987,3 +1068,5 @@ def test_all_functions():
         print("artist_scrape ERROR:", e)
 
     print("\n=== ALL TESTS COMPLETED ===")
+
+test_all_functions()
