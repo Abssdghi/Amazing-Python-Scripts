@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import requests, json
-from utils import *
+from utils import convert_album_to_song_url, get_cover, get_all_singles
 
 
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
