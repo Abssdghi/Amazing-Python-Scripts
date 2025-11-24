@@ -1,53 +1,84 @@
 # Apple Music Scraper
 
-**Apple Music Scraper** is a powerful tool for extracting rich data from Apple Music web pages using web scraping and reverse-engineered structure of `serialized-server-data`.
+A powerful unofficial scraper for extracting structured metadata from Apple Music web pages using web-scraping techniques and reverse-engineered `serialized-server-data`.  
+This tool is for **educational purposes only** and does **not** use any official Apple API.
 
-This project is unofficial and purely for educational purposes. No official Apple API used.
+- **Functionalities**
+  - Search for artists, songs, albums, playlists, and videos
+  - Extract song metadata and preview URLs
+  - Fetch album details including tracks, artist info, similar albums, and videos
+  - Scrape playlist and shared room song URLs
+  - Retrieve video metadata and direct video links
+  - Fetch full artist information including top songs, albums, biography, and more
 
+---
 
-<br>
+## Setup Instructions
 
+1. Clone or download the project  
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Import and use the scraper in your Python script:
+   ```python
+   result = search('night tapes')
+   artists = result['artists']
 
-## 🔧 Functions
+   artist_url = artists[0]['url']
+   artist = artist_scrape(artist_url)
 
-| Function               | Parameters                    | Description                                          |
-|------------------------|------------------------------|------------------------------------------------------|
-| `search(keyword)`      | `keyword: str`                | Search Apple Music for artists, songs, albums, playlists, and videos |
-| `song_scrape(url)`     | `url: str`                   | Get metadata and preview URL of a song               |
-| `album_scrape(url)`    | `url: str`                   | Get album details including songs, artist, similar albums, and videos |
-| `playlist_scrape(url)` | `url: str`                   | Extract song URLs from a playlist                      |
-| `room_scrape(url)`     | `url: str`                   | Extract song URLs from a shared room                   |
-| `video_scrape(url)`    | `url: str`                   | Get video metadata including direct video URL and related content |
-| `artist_scrape(url)`   | `url: str`                   | Get artist metadata including top songs, albums, videos, bio, and more |
+   latest_night_tapes_song_url = artist['latest']
 
-Each function returns structured JSON containing metadata, URLs, images, previews, and related data.
+   song = album_scrape(latest_night_tapes_song_url)
+   song_name = song['title']
+   song_cover = song['image']
 
+   print(f"\nLatest Night Tapes Song: {song_name}\nCover Art: {song_cover}\n")
+   ```
 
-<br>
+---
 
-## 🧠 Usage
+## Detailed Explanation
 
-install requirements
+Each scraping function processes the `serialized-server-data` embedded in Apple Music’s webpage structure.  
+The scraper extracts metadata such as:
+- Titles, URLs, artwork
+- Track lists
+- Preview links
+- Album/artist relationships
+- Related videos or albums  
+All results are returned as **structured JSON objects** for easy access in your applications.
 
-```bash
-pip install -r requirements.txt
+---
+
+## Output
+
+The scraper returns JSON structures like:
+
+```json
+{
+  "title": "Example Song",
+  "artist": "Example Artist",
+  "image": "https://example-image.jpg",
+  "preview": "https://example-preview.m4a",
+  "related": [...],
+  "songs": [...]
+}
 ```
 
-use scraper!
-```python
+You can log these results, display them in an interface, or process them however you like.
 
-result = search('night tapes')
-artists = result['artists']
+---
 
-artist_url = artists[0]['url']
-artist = artist_scrape(artist_url)
+## Author
 
-latest_night_tapes_song_url = artist['latest']
+- [**Abssdghi**](https://github.com/Abssdghi)
 
-song = album_scrape(latest_night_tapes_song_url)
-song_name = song['title']
-song_cover = song['image']
+---
 
-print(f"\nLatest Night Tapes Song: {song_name}\nCover Art: {song_cover}\n")
+## Disclaimers
 
-```
+- This project is **not affiliated with Apple Inc.**  
+- It uses **web scraping** and may break if Apple changes its internal web structure.  
+- For **educational and personal use only**. Redistribution of scraped content may violate Apple Music’s Terms of Service.
