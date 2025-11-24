@@ -29,7 +29,7 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
     try:
         rspn = requests.get(link, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -86,7 +86,7 @@ def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl
     try:
         rspn = requests.get(link, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -148,7 +148,7 @@ def search(keyword="sasha sloan"):
     try:
         rspn = requests.get(link, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -301,7 +301,7 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
     try:
         rspn = requests.get(url, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -415,7 +415,7 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
     try:
         rspn = requests.get(url, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -578,7 +578,7 @@ def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualiz
     try:
         rspn = requests.get(url, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
@@ -719,7 +719,7 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         rspn = requests.get(url, headers=headers, timeout=10)
         rspn.raise_for_status()
-    except (requests.RequestException, Exception):
+    except Exception:
         return result
 
     soup = BeautifulSoup(rspn.text, "html.parser")
