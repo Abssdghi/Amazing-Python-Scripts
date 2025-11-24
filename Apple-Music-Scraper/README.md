@@ -27,8 +27,13 @@ Each function returns structured JSON containing metadata, URLs, images, preview
 
 ## 🧠 Usage
 
-Just import the scraper and call your function:
+install requirements
 
+```bash
+pip install -r requirements.txt
+```
+
+use scraper!
 ```python
 
 result = search('night tapes')
