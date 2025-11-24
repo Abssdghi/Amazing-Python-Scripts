@@ -738,7 +738,6 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     albums = None
     playlists = None
     videos = None
-    singles = None
     appears_on = None
     more_to_see = None
     more_to_hear = None
@@ -757,8 +756,6 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
             playlists = sec
         elif "music-videos" in sec_id:
             videos = sec
-        elif "singles" in sec_id:
-            singles = sec
         elif "appears-on" in sec_id:
             appears_on = sec
         elif "more-to-see" in sec_id:
@@ -793,8 +790,9 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in latest_and_top.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["top"].append(url)
+                result["top"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
@@ -804,14 +802,15 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in albums.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["albums"].append(url)
+                result["albums"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
         pass
 
-    # SINGLES & EP
+    # SINGLES & EPs
     try:
         result["singles_and_EP"] = get_all_singles(url)
     except Exception:
@@ -821,8 +820,9 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in playlists.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["playlists"].append(url)
+                result["playlists"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
@@ -832,19 +832,21 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in videos.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["videos"].append(url)
+                result["videos"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
         pass
 
-    # SIMILAR
+    # SIMILAR ARTISTS
     try:
         for it in similar.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["similar"].append(url)
+                result["similar"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
@@ -854,8 +856,9 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in appears_on.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["appears_on"].append(url)
+                result["appears_on"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
@@ -865,8 +868,9 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in more_to_see.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["more_to_see"].append(url)
+                result["more_to_see"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
@@ -876,8 +880,9 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     try:
         for it in more_to_hear.get("items", []):
             try:
-                url = it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                result["more_to_hear"].append(url)
+                result["more_to_hear"].append(
+                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+                )
             except Exception:
                 continue
     except Exception:
