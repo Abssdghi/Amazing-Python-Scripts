@@ -716,3 +716,70 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
         pass
 
     return result
+
+def test_all_functions():
+    """
+    Test all scraper functions with sample URLs.
+    Prints results count / key fields to verify basic functionality.
+    """
+
+    print("\n=== TEST: room_scrape ===")
+    try:
+        r = room_scrape()
+        print("Room items:", len(r))
+    except Exception as e:
+        print("room_scrape ERROR:", e)
+
+    print("\n=== TEST: playlist_scrape ===")
+    try:
+        p = playlist_scrape()
+        print("Playlist items:", len(p))
+    except Exception as e:
+        print("playlist_scrape ERROR:", e)
+
+    print("\n=== TEST: search ===")
+    try:
+        s = search("night tapes")
+        print("Artists:", len(s.get("artists", [])))
+        print("Albums:", len(s.get("albums", [])))
+        print("Songs:", len(s.get("songs", [])))
+        print("Playlists:", len(s.get("playlists", [])))
+        print("Videos:", len(s.get("videos", [])))
+    except Exception as e:
+        print("search ERROR:", e)
+
+    print("\n=== TEST: song_scrape ===")
+    try:
+        song = song_scrape("https://music.apple.com/us/song/california/1821538031")
+        print("Song title:", song.get("title"))
+        print("Preview URL exists:", bool(song.get("preview-url")))
+    except Exception as e:
+        print("song_scrape ERROR:", e)
+
+    print("\n=== TEST: album_scrape ===")
+    try:
+        album = album_scrape("https://music.apple.com/us/album/1965/1817707266?i=1817707585")
+        print("Album title:", album.get("title"))
+        print("Songs:", len(album.get("songs", [])))
+    except Exception as e:
+        print("album_scrape ERROR:", e)
+
+    print("\n=== TEST: video_scrape ===")
+    try:
+        video = video_scrape("https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026")
+        print("Video title:", video.get("title"))
+        print("Video URL exists:", bool(video.get("video-url")))
+    except Exception as e:
+        print("video_scrape ERROR:", e)
+
+    print("\n=== TEST: artist_scrape ===")
+    try:
+        artist = artist_scrape("https://music.apple.com/us/artist/king-princess/1349968534")
+        print("Artist title:", artist.get("title"))
+        print("Top songs:", len(artist.get("top", [])))
+        print("Albums:", len(artist.get("albums", [])))
+        print("Videos:", len(artist.get("videos", [])))
+    except Exception as e:
+        print("artist_scrape ERROR:", e)
+
+    print("\n=== ALL TESTS COMPLETED ===")
