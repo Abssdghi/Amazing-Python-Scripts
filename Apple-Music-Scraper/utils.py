@@ -6,12 +6,14 @@ from bs4 import BeautifulSoup
 
 def get_cover(url, width, height, img_format="jpg", crop_option=""):
     """
-    Generate a full Apple Music artwork URL with proper width, height, format, and crop settings.
+    Generate a full Apple Music artwork URL\
+    with proper width, height, format, and crop settings.
 
     Parameters
     ----------
     url : str
-        The original Apple Music artwork template URL containing `{w}`, `{h}`, `{f}`, `{c}`.
+        The original Apple Music artwork template URL
+        containing `{w}`, `{h}`, `{f}`, `{c}`.
     width : int or str
         Target width of the image.
     height : int or str
@@ -53,7 +55,8 @@ def convert_album_to_song_url(album_url):
     Parameters
     ----------
     album_url : str
-        Full Apple Music album URL that contains a track ID via the query parameter `?i=...`.
+        Full Apple Music album URL that
+        contains a track ID via the query parameter `?i=...`.
 
     Returns
     -------

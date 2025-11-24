@@ -20,8 +20,8 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
 
     Notes
     -----
-    This function parses the `serialized-server-data` script tag within 
-    the Apple Music room HTML, locates the 'copper-track-swoosh' section, 
+    This function parses the `serialized-server-data` script tag within
+    the Apple Music room HTML, locates the 'copper-track-swoosh' section,
     and extracts track URLs.
     """
     result = []
@@ -222,9 +222,9 @@ def search(keyword="sasha sloan"):
             )
             result["albums"].append(
                 {
-                    "title": title, 
-                    "artist": artist, 
-                    "url": url, 
+                    "title": title,
+                    "artist": artist,
+                    "url": url,
                     "image": img
                 }
             )
@@ -247,7 +247,7 @@ def search(keyword="sasha sloan"):
                 {
                     "title": title,
                     "artist": artist,
-                    "url": url, 
+                    "url": url,
                     "image": img
                 }
             )
@@ -420,7 +420,8 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
 
 def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707585"):
     """
-    Scrape an Apple Music album page and extract metadata, songs, related albums, videos, etc.
+    Scrape an Apple Music album page
+    and extract metadata, songs, related albums, videos, etc.
 
     Parameters
     ----------
@@ -766,7 +767,7 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
 
     Notes
     -----
-    This is the most complex scraper and extracts ~12 different sections 
+    This is the most complex scraper and extracts ~12 different sections
     from the artist page.
     """
     result = {
@@ -1001,7 +1002,6 @@ def test_all_functions():
       - Counts of returned items.
       - Key fields such as title, preview-url existence, etc.
     """
-
     print("\n=== TEST: room_scrape ===")
     try:
         r = room_scrape()
@@ -1068,5 +1068,3 @@ def test_all_functions():
         print("artist_scrape ERROR:", e)
 
     print("\n=== ALL TESTS COMPLETED ===")
-
-test_all_functions()
