@@ -2,7 +2,27 @@ from bs4 import BeautifulSoup
 import requests, json
 from utils import *
 
+
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
+    """
+    Scrape a shared Apple Music room and extract song URLs.
+
+    Parameters
+    ----------
+    link : str, optional
+        URL of the Apple Music room page. Defaults to an example room link.
+
+    Returns
+    -------
+    list[str]
+        List of converted song URLs extracted from the room.
+
+    Notes
+    -----
+    This function parses the `serialized-server-data` script tag within 
+    the Apple Music room HTML, locates the 'copper-track-swoosh' section, 
+    and extracts track URLs.
+    """
     result = []
     headers = {"User-Agent": "Mozilla/5.0"}
 
@@ -39,6 +59,7 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
             continue
 
     return result
+
 
 def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl.2b0e6e332fdf4b7a91164da3162127b5"):
     result = []
@@ -77,6 +98,7 @@ def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl
             continue
 
     return result
+
 
 def search(keyword="sasha sloan"):
     result = {"artists": [], "albums": [], "songs": [], "playlists": [], "videos": []}
@@ -200,6 +222,7 @@ def search(keyword="sasha sloan"):
 
     return result
 
+
 def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
     result = {
         "title": "",
@@ -277,6 +300,7 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
         pass
 
     return result
+
 
 def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707585"):
     result = {
@@ -419,6 +443,7 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
 
     return result
 
+
 def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026"):
     result = {
         "title": "",
@@ -518,6 +543,7 @@ def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualiz
         pass
 
     return result
+
 
 def artist_scrape(url="https://music.apple.com/us/artist/king-princess/1349968534"):
     result = {
