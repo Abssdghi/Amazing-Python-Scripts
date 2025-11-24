@@ -1,37 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import json
-from utils import convert_album_to_song_url, get_cover, get_all_singles
-
-
-def safe_action_url(item):
-    try:
-        # segue-based URLs (most items)
-        return item["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-    except Exception:
-        pass
-
-    try:
-        # fallback: plain contentDescriptor
-        return item["contentDescriptor"]["url"]
-    except Exception:
-        return None
-
-
-def find_section(sections, key):
-    for sec in sections:
-        if key in sec.get("id", ""):
-            return sec
-    return None
-
-
-def append_urls_from_section(section, target_list):
-    if not section:
-        return
-    for it in section.get("items", []):
-        url = safe_action_url(it)
-        if url:
-            target_list.append(url)
+from utils import convert_album_to_song_url, get_cover
+from utils import safe_action_url, find_section, append_urls_from_section
 
 
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
@@ -697,7 +668,6 @@ def video_scrape(
     item = (music_video_header or {}).get("items", [{}])[0]
     result["title"] = item.get("title", "")
 
-
     # IMAGE
     try:
         artwork = item.get("artwork", {}).get("dictionary", {})
@@ -824,16 +794,16 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     except (KeyError, IndexError, json.JSONDecodeError):
         return result
 
-    artist_detail   = find_section(sections, "artist-detail-header-section")
-    latest_and_top  = find_section(sections, "latest-release-and-top-songs")
-    albums          = find_section(sections, "full-albums")
-    playlists       = find_section(sections, "playlists")
-    videos          = find_section(sections, "music-videos")
-    appears_on      = find_section(sections, "appears-on")
-    more_to_see     = find_section(sections, "more-to-see")
-    more_to_hear    = find_section(sections, "more-to-hear")
-    bio             = find_section(sections, "artist-bio")
-    similar         = find_section(sections, "similar-artists")
+    artist_detail = find_section(sections, "artist-detail-header-section")
+    latest_and_top = find_section(sections, "latest-release-and-top-songs")
+    albums = find_section(sections, "full-albums")
+    playlists = find_section(sections, "playlists")
+    videos = find_section(sections, "music-videos")
+    appears_on = find_section(sections, "appears-on")
+    more_to_see = find_section(sections, "more-to-see")
+    more_to_hear = find_section(sections, "more-to-hear")
+    bio = find_section(sections, "artist-bio")
+    similar = find_section(sections, "similar-artists")
 
     # HEADER
     try:
@@ -987,4 +957,4 @@ def test_all_functions():
     print("\n=== ALL TESTS COMPLETED ===")
 
 
-test_all_functions()
+# test_all_functions()
