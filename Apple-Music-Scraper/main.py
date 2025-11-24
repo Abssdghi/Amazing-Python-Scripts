@@ -205,11 +205,23 @@ def search(keyword="sasha sloan"):
             sec_map["music_video"] = sec
 
     # Parse all categories using one helper
-    result["artists"] = parse_search_items(sec_map["artist"], "artists", use_links=False)
+    result["artists"] = parse_search_items(
+        sec_map["artist"],
+        "artists",
+        use_links=False
+    )
     result["albums"] = parse_search_items(sec_map["album"], "albums", use_links=True)
     result["songs"] = parse_search_items(sec_map["song"], "songs", use_links=False)
-    result["playlists"] = parse_search_items(sec_map["playlist"], "playlists", use_links=True)
-    result["videos"] = parse_search_items(sec_map["music_video"], "videos", use_links=True)
+    result["playlists"] = parse_search_items(
+        sec_map["playlist"],
+        "playlists",
+        use_links=True
+    )
+    result["videos"] = parse_search_items(
+        sec_map["music_video"],
+        "videos",
+        use_links=True
+    )
 
     return result
 

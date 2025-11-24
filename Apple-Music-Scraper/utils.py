@@ -573,7 +573,7 @@ def extract_video_urls(section):
     return vids
 
 
-def parse_search_items(section, result_key, use_links=False):
+def parse_search_items(section, use_links=False):
     """
     Generic parser for Apple Music search result sections.
 
@@ -581,8 +581,6 @@ def parse_search_items(section, result_key, use_links=False):
     ----------
     section : dict
         Section containing "items".
-    result_key : str
-        Key in final result dict (artists, albums, songs, etc).
     use_links : bool
         If True, use titleLinks/subtitleLinks instead of title/subtitle.
 
