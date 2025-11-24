@@ -4,6 +4,36 @@ import json
 from utils import convert_album_to_song_url, get_cover, get_all_singles
 
 
+def safe_action_url(item):
+    try:
+        # segue-based URLs (most items)
+        return item["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+    except Exception:
+        pass
+
+    try:
+        # fallback: plain contentDescriptor
+        return item["contentDescriptor"]["url"]
+    except Exception:
+        return None
+
+
+def find_section(sections, key):
+    for sec in sections:
+        if key in sec.get("id", ""):
+            return sec
+    return None
+
+
+def append_urls_from_section(section, target_list):
+    if not section:
+        return
+    for it in section.get("items", []):
+        url = safe_action_url(it)
+        if url:
+            target_list.append(url)
+
+
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
     """
     Scrape a shared Apple Music room and extract song URLs.
@@ -407,11 +437,9 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
     try:
         more_items = sections[-1]["items"]
         for m in more_items:
-            try:
-                url = m["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            url = safe_action_url(m)
+            if url:
                 result["more"].append(url)
-            except (KeyError, IndexError, TypeError):
-                continue
     except (KeyError, IndexError, TypeError):
         pass
 
@@ -563,11 +591,9 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
 
         more_items = sections[more_index].get("items", [])
         for m in more_items:
-            try:
-                url = m["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            url = safe_action_url(m)
+            if url:
                 result["more"].append(url)
-            except Exception:
-                continue
     except Exception:
         pass
 
@@ -575,11 +601,9 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
     try:
         sim_items = sections[similar_index].get("items", [])
         for s in sim_items:
-            try:
-                url = s["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            url = safe_action_url(s)
+            if url:
                 result["similar"].append(url)
-            except Exception:
-                continue
     except Exception:
         pass
 
@@ -670,11 +694,9 @@ def video_scrape(
             similar = sec
 
     # TITLE
-    try:
-        item = music_video_header["items"][0]
-        result["title"] = item.get("title", "")
-    except Exception:
-        pass
+    item = (music_video_header or {}).get("items", [{}])[0]
+    result["title"] = item.get("title", "")
+
 
     # IMAGE
     try:
@@ -715,22 +737,18 @@ def video_scrape(
     # MORE BY ARTIST
     try:
         for m in more.get("items", []):
-            try:
-                url = m["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            url = safe_action_url(m)
+            if url:
                 result["more"].append(url)
-            except Exception:
-                continue
     except Exception:
         pass
 
     # SIMILAR
     try:
         for s in similar.get("items", []):
-            try:
-                url = s["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
+            url = safe_action_url(s)
+            if url:
                 result["similar"].append(url)
-            except Exception:
-                continue
     except Exception:
         pass
 
@@ -806,39 +824,16 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
     except (KeyError, IndexError, json.JSONDecodeError):
         return result
 
-    artist_detail = None
-    latest_and_top = None
-    albums = None
-    playlists = None
-    videos = None
-    appears_on = None
-    more_to_see = None
-    more_to_hear = None
-    bio = None
-    similar = None
-
-    for sec in sections:
-        sec_id = sec.get("id", "")
-        if "artist-detail-header-section" in sec_id:
-            artist_detail = sec
-        elif "latest-release-and-top-songs" in sec_id:
-            latest_and_top = sec
-        elif "full-albums" in sec_id:
-            albums = sec
-        elif "playlists" in sec_id:
-            playlists = sec
-        elif "music-videos" in sec_id:
-            videos = sec
-        elif "appears-on" in sec_id:
-            appears_on = sec
-        elif "more-to-see" in sec_id:
-            more_to_see = sec
-        elif "more-to-hear" in sec_id:
-            more_to_hear = sec
-        elif "artist-bio" in sec_id:
-            bio = sec
-        elif "similar-artists" in sec_id:
-            similar = sec
+    artist_detail   = find_section(sections, "artist-detail-header-section")
+    latest_and_top  = find_section(sections, "latest-release-and-top-songs")
+    albums          = find_section(sections, "full-albums")
+    playlists       = find_section(sections, "playlists")
+    videos          = find_section(sections, "music-videos")
+    appears_on      = find_section(sections, "appears-on")
+    more_to_see     = find_section(sections, "more-to-see")
+    more_to_hear    = find_section(sections, "more-to-hear")
+    bio             = find_section(sections, "artist-bio")
+    similar         = find_section(sections, "similar-artists")
 
     # HEADER
     try:
@@ -863,106 +858,28 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
         pass
 
     # TOP SONGS
-    try:
-        for it in latest_and_top.get("items", []):
-            try:
-                result["top"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(latest_and_top, result["top"])
 
     # ALBUMS
-    try:
-        for it in albums.get("items", []):
-            try:
-                result["albums"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
-
-    # SINGLES & EPs
-    try:
-        result["singles_and_EP"] = get_all_singles(url)
-    except Exception:
-        pass
+    append_urls_from_section(albums, result["albums"])
 
     # PLAYLISTS
-    try:
-        for it in playlists.get("items", []):
-            try:
-                result["playlists"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(playlists, result["playlists"])
 
     # VIDEOS
-    try:
-        for it in videos.get("items", []):
-            try:
-                result["videos"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(videos, result["videos"])
 
-    # SIMILAR ARTISTS
-    try:
-        for it in similar.get("items", []):
-            try:
-                result["similar"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    # SIMILAR
+    append_urls_from_section(similar, result["similar"])
 
     # APPEARS ON
-    try:
-        for it in appears_on.get("items", []):
-            try:
-                result["appears_on"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(appears_on, result["appears_on"])
 
     # MORE TO SEE
-    try:
-        for it in more_to_see.get("items", []):
-            try:
-                result["more_to_see"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(more_to_see, result["more_to_see"])
 
     # MORE TO HEAR
-    try:
-        for it in more_to_hear.get("items", []):
-            try:
-                result["more_to_hear"].append(
-                    it["segue"]["actionMetrics"]["data"][0]["fields"]["actionUrl"]
-                )
-            except Exception:
-                continue
-    except Exception:
-        pass
+    append_urls_from_section(more_to_hear, result["more_to_hear"])
 
     # ABOUT
     try:
@@ -1068,3 +985,6 @@ def test_all_functions():
         print("artist_scrape ERROR:", e)
 
     print("\n=== ALL TESTS COMPLETED ===")
+
+
+test_all_functions()
