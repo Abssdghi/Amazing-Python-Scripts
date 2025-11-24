@@ -62,6 +62,24 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
 
 
 def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl.2b0e6e332fdf4b7a91164da3162127b5"):
+    """
+    Scrape an Apple Music playlist and extract all track URLs.
+
+    Parameters
+    ----------
+    link : str, optional
+        URL of the Apple Music playlist. Defaults to New Music Daily.
+
+    Returns
+    -------
+    list[str]
+        List of converted song URLs from the playlist.
+
+    Notes
+    -----
+    Uses the 'track-list' section from Apple Music's internal serialized
+    server data to extract song action URLs.
+    """
     result = []
     headers = {"User-Agent": "Mozilla/5.0"}
 
@@ -101,6 +119,28 @@ def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl
 
 
 def search(keyword="sasha sloan"):
+    """
+    Search Apple Music for artists, songs, albums, playlists and videos.
+
+    Parameters
+    ----------
+    keyword : str, optional
+        Search query to send to Apple Music. Defaults to "sasha sloan".
+
+    Returns
+    -------
+    dict
+        Structured JSON-like dictionary containing search results:
+        - artists
+        - albums
+        - songs
+        - playlists
+        - videos
+
+    Notes
+    -----
+    Scrapes `serialized-server-data` to access Apple Music's internal search structure.
+    """
     result = {"artists": [], "albums": [], "songs": [], "playlists": [], "videos": []}
     link = f"https://music.apple.com/us/search?term={keyword}"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -224,6 +264,30 @@ def search(keyword="sasha sloan"):
 
 
 def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
+    """
+    Scrape a single Apple Music song page and extract metadata.
+
+    Parameters
+    ----------
+    url : str, optional
+        URL of the Apple Music song. Defaults to sample link.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - title
+        - image (full resolution)
+        - kind (song type)
+        - album info (title + URL)
+        - artist info (title + URL)
+        - preview-url
+        - list of more songs
+
+    Notes
+    -----
+    Uses the `schema:song` JSON-LD tag to extract preview URL.
+    """
     result = {
         "title": "",
         "image": "",
@@ -303,6 +367,37 @@ def song_scrape(url="https://music.apple.com/us/song/california/1821538031"):
 
 
 def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707585"):
+    """
+    Scrape an Apple Music album page and extract metadata, songs, related albums, videos, etc.
+
+    Parameters
+    ----------
+    url : str, optional
+        URL of the Apple Music album. Defaults to example album.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - title
+        - image
+        - caption/description
+        - artist info
+        - song URLs
+        - album info text
+        - more songs (same artist)
+        - similar (recommended) albums
+        - videos related to the album
+
+    Notes
+    -----
+    Extracts multiple sections such as:
+    - album-detail
+    - track-list
+    - similar albums
+    - more by artist
+    - album videos
+    """
     result = {
         "title": "",
         "image": "",
@@ -445,6 +540,30 @@ def album_scrape(url="https://music.apple.com/us/album/1965/1817707266?i=1817707
 
 
 def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualizer/1810547026"):
+    """
+    Scrape Apple Music music-video page and extract metadata + video file URL.
+
+    Parameters
+    ----------
+    url : str, optional
+        URL of the Apple Music music-video. Defaults to example.
+
+    Returns
+    -------
+    dict
+        {
+            title,
+            image,
+            artist: {title, url},
+            video-url,
+            more (same artist),
+            similar (same genre)
+        }
+
+    Notes
+    -----
+    Uses JSON-LD block `schema:music-video` to extract the direct video content URL.
+    """
     result = {
         "title": "",
         "image": "",
@@ -546,6 +665,38 @@ def video_scrape(url="https://music.apple.com/us/music-video/gucci-mane-visualiz
 
 
 def artist_scrape(url="https://music.apple.com/us/artist/king-princess/1349968534"):
+    """
+    Scrape an Apple Music artist page and extract all available metadata.
+
+    Parameters
+    ----------
+    url : str, optional
+        Apple Music artist page URL. Defaults to King Princess sample link.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - title
+        - image
+        - latest release URL
+        - list of top songs
+        - all albums
+        - singles & EPs
+        - playlists
+        - videos
+        - similar artists
+        - appears on
+        - more-to-see (videos)
+        - more-to-hear (songs)
+        - about text
+        - extra info (bio subtitle)
+
+    Notes
+    -----
+    This is the most complex scraper and extracts ~12 different sections 
+    from the artist page.
+    """
     result = {
         "title": "",
         "image": "",
@@ -745,8 +896,29 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
 
 def test_all_functions():
     """
-    Test all scraper functions with sample URLs.
-    Prints results count / key fields to verify basic functionality.
+    Run integration-style tests for all scraper functions.
+
+    This function executes each scraper with sample inputs to verify that:
+      - The function runs without raising exceptions.
+      - The returned structures contain expected keys.
+      - Basic counts (number of items, presence of preview/video URLs, etc.)
+        match minimal sanity expectations.
+
+    Tests performed:
+      1. room_scrape()       – prints number of room items.
+      2. playlist_scrape()   – prints number of playlist items.
+      3. search()            – searches for "night tapes" and prints result counts.
+      4. song_scrape()       – scrapes a sample Apple Music song URL.
+      5. album_scrape()      – scrapes a sample Apple Music album URL.
+      6. video_scrape()      – scrapes a sample Apple Music video URL.
+      7. artist_scrape()     – scrapes a sample Apple Music artist page.
+
+    This is not a formal unit test suite, but a quick manual verification tool
+    intended to confirm scraper functionality during development.
+
+    Prints:
+      - Counts of returned items.
+      - Key fields such as title, preview-url existence, etc.
     """
 
     print("\n=== TEST: room_scrape ===")
