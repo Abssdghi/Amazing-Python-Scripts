@@ -955,6 +955,3 @@ def test_all_functions():
         print("artist_scrape ERROR:", e)
 
     print("\n=== ALL TESTS COMPLETED ===")
-
-
-# test_all_functions()
