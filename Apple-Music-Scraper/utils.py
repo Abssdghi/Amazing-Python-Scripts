@@ -571,3 +571,53 @@ def extract_video_urls(section):
             continue
 
     return vids
+
+
+def parse_search_items(section, result_key, use_links=False):
+    """
+    Generic parser for Apple Music search result sections.
+
+    Parameters
+    ----------
+    section : dict
+        Section containing "items".
+    result_key : str
+        Key in final result dict (artists, albums, songs, etc).
+    use_links : bool
+        If True, use titleLinks/subtitleLinks instead of title/subtitle.
+
+    Returns
+    -------
+    list[dict]
+    """
+    items_out = []
+
+    for item in section.get("items", []):
+        try:
+            url = item["contentDescriptor"]["url"]
+
+            if use_links:
+                title = item["titleLinks"][0]["title"]
+                artist = item["subtitleLinks"][0]["title"]
+            else:
+                title = item.get("title", "")
+                artist = item.get("subtitleLinks", [{}])[0].get("title", "")
+
+            artwork = item.get("artwork", {}).get("dictionary", {})
+            img = get_cover(
+                artwork.get("url", ""),
+                artwork.get("width", 0),
+                artwork.get("height", 0),
+            )
+
+            items_out.append({
+                "title": title,
+                "artist": artist,
+                "url": url,
+                "image": img
+            })
+
+        except Exception:
+            continue
+
+    return items_out

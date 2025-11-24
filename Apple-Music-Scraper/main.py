@@ -6,7 +6,7 @@ from utils import safe_action_url, find_section, append_urls_from_section
 from utils import fetch_page, parse_server_data, extract_header_sections
 from utils import extract_video_header, extract_video_url, extract_urls
 from utils import find_section_indices, extract_album_header, extract_song_list
-from utils import extract_more, extract_video_urls
+from utils import extract_more, extract_video_urls, parse_search_items
 
 
 def room_scrape(link="https://music.apple.com/us/room/6748797380"):
@@ -162,12 +162,14 @@ def search(keyword="sasha sloan"):
     link = f"https://music.apple.com/us/search?term={keyword}"
     headers = {"User-Agent": "Mozilla/5.0"}
 
+    # Fetch page
     try:
         rspn = requests.get(link, headers=headers, timeout=10)
         rspn.raise_for_status()
     except Exception:
         return result
 
+    # Parse serialized data
     soup = BeautifulSoup(rspn.text, "html.parser")
     tag = soup.find("script", {"id": "serialized-server-data"})
     if not tag:
@@ -176,134 +178,38 @@ def search(keyword="sasha sloan"):
     try:
         data = json.loads(tag.text)
         sections = data[0]["data"]["sections"]
-    except (KeyError, IndexError, json.JSONDecodeError):
+    except Exception:
         return result
 
-    artists = {"items": []}
-    albums = {"items": []}
-    songs_block = {"items": []}
-    playlists = {"items": []}
-    videos = {"items": []}
+    # Identify relevant sections
+    sec_map = {
+        "artist": None,
+        "album": None,
+        "song": None,
+        "playlist": None,
+        "music_video": None
+    }
 
     for sec in sections:
         sec_id = sec.get("id", "")
+
         if "artist" in sec_id:
-            artists = sec
+            sec_map["artist"] = sec
         elif "album" in sec_id:
-            albums = sec
+            sec_map["album"] = sec
         elif "song" in sec_id:
-            songs_block = sec
+            sec_map["song"] = sec
         elif "playlist" in sec_id:
-            playlists = sec
+            sec_map["playlist"] = sec
         elif "music_video" in sec_id:
-            videos = sec
+            sec_map["music_video"] = sec
 
-    # Artists
-    for item in artists.get("items", []):
-        try:
-            url = item["contentDescriptor"]["url"]
-            title = item.get("title", "")
-            artwork_dict = item.get("artwork", {}).get("dictionary", {})
-            img = get_cover(
-                artwork_dict.get("url", ""),
-                artwork_dict.get("width", 0),
-                artwork_dict.get("height", 0),
-            )
-            result["artists"].append({"title": title, "url": url, "image": img})
-        except (KeyError, TypeError):
-            continue
-
-    # Albums
-    for item in albums.get("items", []):
-        try:
-            url = item["contentDescriptor"]["url"]
-            title = item["titleLinks"][0]["title"]
-            artist = item["subtitleLinks"][0]["title"]
-            artwork_dict = item.get("artwork", {}).get("dictionary", {})
-            img = get_cover(
-                artwork_dict.get("url", ""),
-                artwork_dict.get("width", 0),
-                artwork_dict.get("height", 0),
-            )
-            result["albums"].append(
-                {
-                    "title": title,
-                    "artist": artist,
-                    "url": url,
-                    "image": img
-                }
-            )
-        except (KeyError, TypeError, IndexError):
-            continue
-
-    # Songs
-    for item in songs_block.get("items", []):
-        try:
-            url = item["contentDescriptor"]["url"]
-            title = item.get("title", "")
-            artist = item["subtitleLinks"][0]["title"]
-            artwork_dict = item.get("artwork", {}).get("dictionary", {})
-            img = get_cover(
-                artwork_dict.get("url", ""),
-                artwork_dict.get("width", 0),
-                artwork_dict.get("height", 0),
-            )
-            result["songs"].append(
-                {
-                    "title": title,
-                    "artist": artist,
-                    "url": url,
-                    "image": img
-                }
-            )
-        except (KeyError, TypeError, IndexError):
-            continue
-
-    # Playlists
-    for item in playlists.get("items", []):
-        try:
-            url = item["contentDescriptor"]["url"]
-            title = item["titleLinks"][0]["title"]
-            artist = item["subtitleLinks"][0]["title"]
-            artwork_dict = item.get("artwork", {}).get("dictionary", {})
-            img = get_cover(
-                artwork_dict.get("url", ""),
-                artwork_dict.get("width", 0),
-                artwork_dict.get("height", 0),
-            )
-            result["playlists"].append(
-                {
-                    "title": title,
-                    "artist": artist,
-                    "url": url,
-                    "image": img
-                }
-            )
-        except (KeyError, TypeError, IndexError):
-            continue
-
-    # Videos
-    for item in videos.get("items", []):
-        try:
-            url = item["contentDescriptor"]["url"]
-            title = item["titleLinks"][0]["title"]
-            artist = item["subtitleLinks"][0]["title"]
-            artwork_dict = item.get("artwork", {}).get("dictionary", {})
-            img = get_cover(
-                artwork_dict.get("url", ""),
-                artwork_dict.get("width", 0),
-                artwork_dict.get("height", 0),
-            )
-            result["videos"].append(
-                {
-                    "title": title,
-                    "artist": artist,
-                    "url": url,
-                    "image": img
-                }
-            )
-        except (KeyError, TypeError, IndexError):
-            continue
+    # Parse all categories using one helper
+    result["artists"] = parse_search_items(sec_map["artist"], "artists", use_links=False)
+    result["albums"] = parse_search_items(sec_map["album"], "albums", use_links=True)
+    result["songs"] = parse_search_items(sec_map["song"], "songs", use_links=False)
+    result["playlists"] = parse_search_items(sec_map["playlist"], "playlists", use_links=True)
+    result["videos"] = parse_search_items(sec_map["music_video"], "videos", use_links=True)
 
     return result
 
